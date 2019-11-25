@@ -1,0 +1,11 @@
+*.DS_Store
+.svn
+*.swp
+*.swo
+.npm
+node_modules
+logs
+*.log
+npm-debug.log*
+issue.info
+GIT_COMMIT
