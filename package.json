@@ -1,0 +1,27 @@
+{
+  "name": "daily-activities",
+  "version": "1.0.0",
+  "description": "gitpages + issue",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aJean/daily-activities.git"
+  },
+  "author": "ajean",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aJean/daily-activities/issues"
+  },
+  "homepage": "https://github.com/aJean/daily-activities#readme",
+  "dependencies": {
+    "@types/node": "^13.7.0",
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.7.5",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10"
+  }
+}
