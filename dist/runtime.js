@@ -32,6 +32,7 @@
 /******/ 		// run deferred modules when all chunks ready
 /******/ 		return checkDeferredModules();
 /******/ 	};
+          // 比如这种 [["./src/esm.ts","runtime"]]], 0 是入口，后面是依赖，必须保证依赖都加载才可以执行
 /******/ 	function checkDeferredModules() {
 /******/ 		var result;
 /******/ 		for(var i = 0; i < deferredModules.length; i++) {
@@ -87,7 +88,8 @@
 /******/ 		// Flag the module as loaded
 /******/ 		module.l = true;
 /******/
-/******/ 		// Return the exports of the module
+/******/ 		// 两种方式：直接编译成 _moudle__WEBPACK_IMPORTED_MODULE_0__["default"]
+            //         __webpack_require__.n
 /******/ 		return module.exports;
 /******/ 	}
 /******/
