@@ -83,13 +83,14 @@
 /******/ 		};
 /******/
 /******/ 		// Execute the module function
+            // module 和 module.exports 都会作为参数传给编译过的  wrap function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 /******/
 /******/ 		// Flag the module as loaded
 /******/ 		module.l = true;
 /******/
 /******/ 		// 两种方式：直接编译成 _moudle__WEBPACK_IMPORTED_MODULE_0__["default"]
-            //         __webpack_require__.n
+            //         __webpack_require__.n （ems + commonjs）
 /******/ 		return module.exports;
 /******/ 	}
 /******/
