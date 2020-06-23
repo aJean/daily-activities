@@ -20,6 +20,8 @@
 /******/ 				modules[moduleId] = moreModules[moduleId];
 /******/ 			}
 /******/ 		}
+/******/
+/******/    // 再把模块数据放到 jsonpArray 数组里
 /******/ 		if(parentJsonpFunction) parentJsonpFunction(data);
 /******/
 /******/ 		while(resolves.length) {
@@ -215,6 +217,7 @@
 /******/ 	var oldJsonpFunction = jsonpArray.push.bind(jsonpArray);
 /******/ 	jsonpArray.push = webpackJsonpCallback;
 /******/ 	jsonpArray = jsonpArray.slice();
+/******/  // 已经存在的模块
 /******/ 	for(var i = 0; i < jsonpArray.length; i++) webpackJsonpCallback(jsonpArray[i]);
 /******/ 	var parentJsonpFunction = oldJsonpFunction;
 /******/
