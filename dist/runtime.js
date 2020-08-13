@@ -131,10 +131,11 @@
 /******/ 				// create error before stack unwound to get useful stacktrace later
 /******/ 				var error = new Error();
 /******/ 				onScriptComplete = function (event) {
-/******/ 					// avoid mem leaks in IE.
+/******/ 					// 避免老 ie 内存泄露
 /******/ 					script.onerror = script.onload = null;
 /******/ 					clearTimeout(timeout);
 /******/ 					var chunk = installedChunks[chunkId];
+                  // 不为 0 说明 webpackJsonpCallback 执行失败，也就是 chunk 加载不成功
 /******/ 					if(chunk !== 0) {
 /******/ 						if(chunk) {
 /******/ 							var errorType = event && (event.type === 'load' ? 'missing' : event.type);
@@ -143,6 +144,7 @@
 /******/ 							error.name = 'ChunkLoadError';
 /******/ 							error.type = errorType;
 /******/ 							error.request = realSrc;
+                      // 执行 reject
 /******/ 							chunk[1](error);
 /******/ 						}
 /******/ 						installedChunks[chunkId] = undefined;
