@@ -31,10 +31,11 @@
 /******/ 		// add entry modules from loaded chunk to deferred list
 /******/ 		deferredModules.push.apply(deferredModules, executeModules || []);
 /******/
-/******/ 		// run deferred modules when all chunks ready
+/******/ 		// 检查入口模块的执行
 /******/ 		return checkDeferredModules();
 /******/ 	};
-          // 比如这种 [["./src/esm.ts","runtime"]]], 0 是入口，后面是依赖，必须保证依赖都加载才可以执行
+          // 比如这种 [id, factory, [["./src/esm.ts","runtime"]]]
+          // id 是 chunkId，factory 模块函数主体，后面的数组表示入口模块，但是入口模块也会有依赖，runtime 就是一个基本依赖
 /******/ 	function checkDeferredModules() {
 /******/ 		var result;
 /******/ 		for(var i = 0; i < deferredModules.length; i++) {
@@ -44,8 +45,10 @@
 /******/ 				var depId = deferredModule[j];
 /******/ 				if(installedChunks[depId] !== 0) fulfilled = false;
 /******/ 			}
+/******/      // 依赖都加载了，执行入口模块的 module factory
 /******/ 			if(fulfilled) {
 /******/ 				deferredModules.splice(i--, 1);
+                // 0 对应的就是 ./src/esm.ts
 /******/ 				result = __webpack_require__(__webpack_require__.s = deferredModule[0]);
 /******/ 			}
 /******/ 		}
@@ -70,7 +73,7 @@
 /******/ 		return __webpack_require__.p + "" + ({}[chunkId]||chunkId) + ".chunk.js"
 /******/ 	}
 /******/
-/******/ 	// The require function
+/******/ 	// The require function，把 installedChunks 缓存到 installedModules
 /******/ 	function __webpack_require__(moduleId) {
 /******/
 /******/ 		// Check if module is in cache
