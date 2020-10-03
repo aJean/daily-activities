@@ -17,16 +17,33 @@
 - plateforms/web/runtime/index.js
 - core/instance/index.js
 
-#### entry-runtime-with-compiler 做了什么
+### 启动
+一切都始于 new Vue()，执行 this._init，内部会有一系列的初始化工作 initEvents、initRender、initState ...
+
+#### initProxy
+dev 环境对 vm._renderProxy 设置代理，在访问未定义属性时给予报错提示
+
+#### initState
+会处理 vm 上的属性，比如 data、props、methods、watcher、computed
+- methods 里的 fn 直接挂载到 vm 上
+- props 通过 proxy _props 代理到 vm
+- data 通过 proxy _data 代理到 vm
+- 对 data 进行响应式处理，就是执行 observe
+
+#### $mount
+执行 dom 挂载，定义在 web/runtime/index.js 中，本身比较简单，查找 el 执行 mountComponent
+但是 entry-runtime-with-compiler 会重写这个 $mont，加入对 template 运行时编译的逻辑
+
+#### entry-runtime-with-compiler
+判断当前 vm 对象有没有 options.render（工具构建的都会生成这个方法），没有就要进行运行时 compile
 - 首先找到 template，这里可以自己传 string 或者 dom node，再或者直接使用 el 的 outHtml，都没传就等着报异常吧
-- 通过 compileToFunctions 生成 $options.render 和 $options.staticRenderFns，就是 vue-loader 做的事情
+- 通过 compileToFunctions 将 template 生成 $options.render 和 $options.staticRenderFns，就是 vue-loader 做的事情
 - 然后执行 Vue.prototype.$mount 之后就是一致的流程了
 
 #### mountComponent
 - 首先找 $options.render，如果没有只能创建 emptyVnode
 - 生成 updateComponent 函数
-- 创建渲染 watcher，传入 updateComponent，注意只有一个 render watcher 并且会存在 vm._watcher 上面，$forceUpdate 时候也会使用
-- 因为创建 watcher 时就会执行 get - getter - updateComponent，所以这里界面就渲染了
+- 创建渲染 watcher，传入 updateComponent，并且初始执行一次，保存 vm._watcher，$forceUpdate 时候也会使用
 - 执行 mount 生命周期
 ```javascript
 // 渲染 watcher 的 getter 就是 updateComponent，这样一调用 watcher.get() 就会渲染界面
@@ -53,12 +70,153 @@ vnode = createEmptyVNode()
 虚拟 dom 一个抽象的数据结构，内存计算、跨平台，代码在 src/vnode 下面
 - vue 基于开源库 snabbdom 实现自己的 vnode diff
 
+#### createElement
+_c 和 $createElement 都是调用 vdom/create-element.js 里的 createElement 方法
+- 首先处理 children，通过 normalizeChildren 将基础值生成 text vnode，如果是数组进行 flatten
+- 根据 tag 类型创建 component 或者 vnode
+- vm.$mount 开始渲染 dom - mountComponent - vm._update(vm._render(), hydrating)
 
-#### vm._updatefor
-将 vnode 渲染到页面，内部会调用 vm.__patch__，__patch__ 方法是 platforms 下面实现的，比如 src/platforms/web/runtime/patch
-- patch 主要是处理 dom 操作，里面会有两个集合，一个是所有 dom 操作方法，一个是对 dom 属性的 hooks
-- createPatchFunction 使用传入的集合初始化一些钩子，因为 snabbdom 在 patch 过程中会执行不同阶段的钩子，这里是建立联系
-- 最终我们执行的是 src/core/vdom/patch.js，这样设计是将与平台相关的操作隔离出去，core 里面只处理通用逻辑，同理 react 的 renderer
+#### vm._update
+将 vnode 渲染到页面，代码在 core/instance/lifecycle.js 中
+内部会调用 vm.__patch__，src/platforms/web/runtime/patch
+- 首先执行 createPatchFunction，参数是 platforms/web 提供的两个集合，{ nodeOps, modules }
+- modules 表示属性 hooks，会保存在内部的 cbs 中，snabbdom 在 patch 过程中会执行不同阶段的钩子，这里是建立联系
+- nodeOps 表示节点操作方法，会在 createElm 中用到，比如 vnode.elm = nodeOps.createElement(tag, vnode)
+- platforms/web/createPatchFunction  --> (平台差异性 hooks) --> src/core/vdom/patch.js
+- 这样设计是将与宿主平台相关的操作隔离出去，core 里面只处理通用逻辑，同理 react 的 renderer
 ```javascript
 export const patch: Function = createPatchFunction({ nodeOps, modules })
 ```
+
+#### 一些思考
+Vue 本身就是一个 function，非常简单，通过不同的 mixins 将功能写入 prototype，使 vue instance 具有这些能力
+- 跨平台架构，vdom 本身是一个抽象的数据结构，vue 将 dom patch 和 dom functions 做分离设计，functions 与平台强关联
+- runtime-only 和 runtime-compiler，给使用者更多架构方面的选择
+- proxy 的使用，将 data、props 代理到 vm this 上面，方便用户读取；另外也可以做访问权限限制
+
+
+### 组件化
+render 函数可以直接渲染组件，h => h(App)
+
+#### 流程
+- 入口是 new vue，先初始化 _init 会执行很多 initXXX，然后执行 $mount 和 _update， 这是一个主线
+- _update 调用 opts.render 内部使用 createElement 生成 vnode， 可能是 dom vnode 也可能是 component vnode 
+- vdom/createElement 将创建子组件的 Ctor，并执行 installComponentHooks 安装 componentVNodeHooks
+- patch 期间通过 createElm 将 vnode 转化为 dom element，这里会尝试先执行 patch/createComponent，调用 hooks.init 
+- componentVNodeHook.init 会执行 createComponentInstanceForVnode 创建组件 instance 
+- createComponentInstanceForVnode 就是 new 组件的 Ctor，同时将 InternalComponentOptions 传给 Ctor
+- 然后执行 instance.$mount 继续向下 patch
+- 如果不是 component node，就会通过 nodeOps 创建 dom element，完成 mount 流程
+
+#### vdom/createComponent
+使用 vue.extend 创建组件构造器，内部会有 cid 缓存，避免同一个组件多次创建
+
+- 注意一下这几个 api 的区别：Vue.extend 创建组件类，Vue.component 将组件类注册到全局，Vue.mixin 所有 instance 中混入属性
+- 集成 Vue 生成组件构造器、异步组件处理、merge 组件 vnode hook
+- 最后生成组件类别的 vnode，构造器和 children 都会放到 componentOptions 里面
+
+#### createComponentInstanceForVnode
+- 生成 options 作为 new Ctor 的参数，这里有比较重要的属性 _parentVnode 和 parent 以及 isComponent
+- _parentVnode 就是当前这个组件的 vnode，parent 是当前的 this 在 _update 时候设置的
+- 返回 new vnode.componentOptions.Ctor，也就是用组件构造器生成 instance
+- 还记得 new Vue 会执行 _init 吗，如果 isComponent 是 true，就会执行 initInternalComponent，把上面的参数放到 vm.$options 上
+- 执行 initLifecycle 时候会处理 parent.$children 和 this.$parent，建立 instance 之间的关系
+- 再到执行 _render 时会给生成的 vnode 添加 parentVnode
+- 再然后在执行 patch 时候还会发现有子组件，这时候子组件就可以知道他的 parentVnode 和上级的 this context 了
+
+#### vm._vnode
+上一次的 vnode 结构，会与本次 render 生成 vnode 一起做 dom diff
+
+#### 思考
+组件树如何构建，实例之间如何建立联系
+可以看到这是一个深度优先递归的流程，如果是 dom vnode 就执行宿主方法创建 dom element
+如果是 component vnode，就 new instance 然后再向下 mount！
+- 要理解 render 返回的是 vnode，patch 是将 vnode 更新到 dom 中
+- instance 关系维护： this.$parent、this.$children，有啥用呢，举个例子 $destroy 时需要将依赖也一起 remove
+- this._vnode 实例本身的 vnode，this.$vnode == vnode.parent 是组件实例化之前创建的占位 vnode
+- vm.$el == vnode.elm == patch 返回的 dom element
+- vnode.componentInstance 当前 vnode 节点所属的组件 instance
+- 每次 _update 使用 setActiveInstance 将 this 保存在一个全局对象上，这样内部需要创建新组实例时可以直接拿到上下文
+- patch/createComponent 递归
+
+#### vm.$el
+初始化时 component vnode 都是没有 $el 的
+- update 时会设置 vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false)
+- patch 最后返回 vnode.elm，createElm 中遇到 dom vnode 会设置 vnode.elm
+
+#### 节点挂载
+总结一下就是 dom vnode 在 createElm 内部执行挂载，component vnode 在 createComponent 内部执行挂载
+- 最外层是我们手动传入的 el，这个会在 $mount 时候做处理直接赋值给 vnode.$el
+- 如果是 dom vnode，会在 createElm 时候根据 tag 生成对应的 element 作为 vnode.el，他的 child vnode 都会挂载到上面
+- 如果是 component vnode，在 patch/createComponent 时候执行 data.hook.init 做实例化，这时候这个组件本身是没有 el 的
+- 但是组件又会自己执行 $mount 和 patch，patch 一定会最终返回一个 el 给组件，也就是 this.$el = __patch()__
+- 可以看到执行完 hook 后，initComponent 调用时组件的 instance 已经有了 $el
+- 这时候再进行 insert(parentElm, vnode.elm, refElm)
+
+#### 参数合并
+将 Vue.options 与构造器参数的 options 进行合并，作为内部的 this.$options
+这里可能会有 mixin、extend、Vue.options._base（createComponent 时做 extend 集成用到）
+
+- 合并是在 this._init 里面完成的，因为必须把参数处理放在 $mount 之前
+- initInternalComponent 组件参数合并，会用到 Ctor.options，这个本质上也会包含 Vue.options，因为在 Vue.extend 里面做了处理
+- Vue.mixin 之所以是全局 mixin，就是因为这个方法执行了 Vue.options = mergeOptions(Vue.options, mixin)
+- 而我们 new Vue({ mixin }) 只会对这个 instance 起作用
+
+#### 生命周期
+- befroeMounted 先父后子 mounted 相反，before 相关的都是先父后子，也可以用这个机制处理一些事情
+- destroyed 也是先子后父，vm.__patch__(vm._vnode, null) 递归销毁子组件，再执行 callHook(vm, 'destroyed');
+
+#### 组件注册
+代码在 src/global-api/assets.js
+- 全局注册，所有组件中都可以用 Vue.component
+- 局部注册，通过 components: [] 参数，只在组件域下可用，比如业务组件
+- createElement 会对 tag 进行判断，这里传入的是 this.options，根据参数合并原则，全局注册和局部注册的 components 就都能被识别
+- 能被识别的 tag 有 dom 保留标签和 component
+- 还有个问题就是组件初始状态是一个 plainObject，经过 Vue.extend 后变成 Ctor，这个过程在 Vue.component 或 createComponent 中都会做
+- 然后 Vue 会把这个 Ctor 去替换原来的 Sub.options.components[id]，这样就保证同一个组件类只会执行一次 extend
+
+#### 异步组件
+当执行 vnode/createComponent 发现一个 Ctor 是 async component，就会进到 vdom/resolveAsyncComponent
+- 首先直接返回一个注释 vnode 做本次渲染
+- 给 factory 传入 resolve、reject，并根据返回值做异步处理
+- 当执行 resolve 后，会设置 factory.resolved = exports，并且执行 this.$forceUpdate()，触发相关的 watch 重新 update
+- 这个时候就可以拿到 factory.resolved，就和之前组件处理一样的流程了
+
+### watcher 更新
+- 对于 computed watcher，只需要设置 this.dirty = true，这样可以保证模板读取这个属性时会重新执行 evaluate
+- 对于 render watcher 和 user watcher，一般使用异步模式，加入到 queueWatcher 队列，统一使用 nextTick 更新
+- render watcher 更新就是执行 watcher.get() 触发 updateComponent 进行 patch 流程
+- user watcher 会给 cb 传入 value，由开发者觉得执行什么逻辑
+
+#### flushSchedulerQueue
+执行队列 watcher 更新，这里有几个重要的步骤
+- 排序，确保 watcher 的执行按照 id 顺序，从小到大，也就是从父组件到子组件
+- 执行完成后要 resetSchedulerState 恢复状态
+- 还要对 render watcher 执行 updated 生命周期
+
+#### cleanupDeps
+这个非常重要，每次执行 watcher.get() 后要清除旧的依赖
+因为每次渲染过程对 data 或者 props 的读取都会进行新一轮的依赖收集，而一个 render watcher 可能会放到多个属性的 dep 里
+但是我们模板中是存在条件判断的，条件变了可能会让某些属性不再被使用
+这时候如果没有清除旧的依赖，对失效属性的 set 依然会造成 render watcher 的更新，这显然是没必要的！！
+
+#### computed watcher
+入口在 src/instance/state.js 下的 initComputed
+核心是建立 render watcher - computed watcher - 依赖属性的关系网
+lazy 模式，watcher.evaluate 和 watcher.depend 都是专门给它使用的
+
+#### nextTick
+异步执行，尽量使用微循环队列，当前版本的优先级顺序如下：Promise - MutationObserver - setImmediate - setTimeout
+- 这里处理方式与 queueWatcher 一样，并不是每次调用就往 event queue 中扔一个函数，因为这个行为是不可控的
+- 内部保存一个 callbacks，只通过 timeFunc 挂载 flushCallbacks
+- 也就是说尽量让变化因素在我们的代码里控制，不要交给浏览器，这与共享帧动画是一样的意思，值得学习
+
+#### 无法 observe 的情况
+数组索引直接修改，新的属性扩展这种在普通情况下是无效的
+Vue 通过巧妙的利用 dep，解决这个问题
+
+- src/core/instance/observer/array.js，魔改 Array.prototype
+- Vue.set，这个方法利用了 child.dp.notify() 触发了 render watcher 的更新
+- child.dp 是啥？就是我们对属性 defineReactive 的时候，如果发现 value 是数组或对象，就会再对 value 执行 observe
+- new Observer(value) 时候也会创建一个 dep，也就是 ob.dep，这个 dep 也持有 render watcher，但不会被属性的 setter 触发
+- Vue.set 会获取 value.__ob__ 也就是 ob，然后执行 child.dp.notify()，触发更新
