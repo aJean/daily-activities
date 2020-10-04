@@ -1,3 +1,5 @@
+Vue 呀，深入的研究一下
+
 ### 目录
 - compiler 将 template 编译成 render function
 - core 核心
@@ -13,6 +15,7 @@
 ### palteforms
 对 vue 上面的方法做不同平台的处理，比如 $mount 方法，只有平台相关的 runtime 会定义 $mount，这里用的是 core/lifecircle 的 mountComponent
 但是 runtime 和 runtime-compiler 又定义了不同的 $mount
+
 - plateforms/web/entry-runtime-with-compiler
 - plateforms/web/runtime/index.js
 - core/instance/index.js
@@ -36,6 +39,7 @@ dev 环境对 vm._renderProxy 设置代理，在访问未定义属性时给予�
 
 #### entry-runtime-with-compiler
 判断当前 vm 对象有没有 options.render（工具构建的都会生成这个方法），没有就要进行运行时 compile
+
 - 首先找到 template，这里可以自己传 string 或者 dom node，再或者直接使用 el 的 outHtml，都没传就等着报异常吧
 - 通过 compileToFunctions 将 template 生成 $options.render 和 $options.staticRenderFns，就是 vue-loader 做的事情
 - 然后执行 Vue.prototype.$mount 之后就是一致的流程了
@@ -53,7 +57,8 @@ updateComponent = () => {
 ```
 
 #### vm._render
-主要代码在 src/core/instance/render.js
+主要代码在 src/core/instance/render.js，作用是创建 vnode tree
+
 - 调用 this.$options.render，也就是上面编译生成的 render 方法，最终返回 vnode
 - 编译生成 render 函数使用 _c，自定义的使用 $createElement，区别是 $createElement 会对 children 做处理，因为有可能会传文本值
 ```javascript
@@ -79,6 +84,7 @@ _c 和 $createElement 都是调用 vdom/create-element.js 里的 createElement �
 #### vm._update
 将 vnode 渲染到页面，代码在 core/instance/lifecycle.js 中
 内部会调用 vm.__patch__，src/platforms/web/runtime/patch
+
 - 首先执行 createPatchFunction，参数是 platforms/web 提供的两个集合，{ nodeOps, modules }
 - modules 表示属性 hooks，会保存在内部的 cbs 中，snabbdom 在 patch 过程中会执行不同阶段的钩子，这里是建立联系
 - nodeOps 表示节点操作方法，会在 createElm 中用到，比如 vnode.elm = nodeOps.createElement(tag, vnode)
@@ -93,7 +99,6 @@ Vue 本身就是一个 function，非常简单，通过不同的 mixins 将功�
 - 跨平台架构，vdom 本身是一个抽象的数据结构，vue 将 dom patch 和 dom functions 做分离设计，functions 与平台强关联
 - runtime-only 和 runtime-compiler，给使用者更多架构方面的选择
 - proxy 的使用，将 data、props 代理到 vm this 上面，方便用户读取；另外也可以做访问权限限制
-
 
 ### 组件化
 render 函数可以直接渲染组件，h => h(App)
@@ -110,6 +115,7 @@ render 函数可以直接渲染组件，h => h(App)
 
 #### vdom/createComponent
 使用 vue.extend 创建组件构造器，内部会有 cid 缓存，避免同一个组件多次创建
+通过 Vue.cid 把生成的 Ctor 构造函数缓存到 Compoent 的 plain object 本身，避免同一类组件重复创建
 
 - 注意一下这几个 api 的区别：Vue.extend 创建组件类，Vue.component 将组件类注册到全局，Vue.mixin 所有 instance 中混入属性
 - 集成 Vue 生成组件构造器、异步组件处理、merge 组件 vnode hook
@@ -186,11 +192,12 @@ render 函数可以直接渲染组件，h => h(App)
 - 对于 computed watcher，只需要设置 this.dirty = true，这样可以保证模板读取这个属性时会重新执行 evaluate
 - 对于 render watcher 和 user watcher，一般使用异步模式，加入到 queueWatcher 队列，统一使用 nextTick 更新
 - render watcher 更新就是执行 watcher.get() 触发 updateComponent 进行 patch 流程
-- user watcher 会给 cb 传入 value，由开发者觉得执行什么逻辑
+- user watcher 会给 cb 传入 value，由开发者决定执行什么逻辑
 
 #### flushSchedulerQueue
 执行队列 watcher 更新，这里有几个重要的步骤
-- 排序，确保 watcher 的执行按照 id 顺序，从小到大，也就是从父组件到子组件
+为啥会有顺序呢，因为 vue 在 _init 里执行 initState、initComputed、和 initWatch，所以这两个 watcher 都在 render watcher 之前创建
+- 排序，确保 watcher 的执行按照 id 顺序，从小到大，也就是从父组件到子组件，user watcher 先与 render watcher
 - 执行完成后要 resetSchedulerState 恢复状态
 - 还要对 render watcher 执行 updated 生命周期
 
@@ -199,6 +206,10 @@ render 函数可以直接渲染组件，h => h(App)
 因为每次渲染过程对 data 或者 props 的读取都会进行新一轮的依赖收集，而一个 render watcher 可能会放到多个属性的 dep 里
 但是我们模板中是存在条件判断的，条件变了可能会让某些属性不再被使用
 这时候如果没有清除旧的依赖，对失效属性的 set 依然会造成 render watcher 的更新，这显然是没必要的！！
+
+- 初始阶段：首先是 _init 触发的 initState，里面会收集 computed watcher 和 user watcher，后就是 $mount 收集 render watcher
+- 变更阶段：render watcher 触发 mount，遇到组件实例化重复上面的过程，非组件 patch 时候收集 render watcher
+- 所以每次变更都会重新进行依赖收集，在 watcher.get 中 cleanupDeps 是合理的做法
 
 #### computed watcher
 入口在 src/instance/state.js 下的 initComputed
