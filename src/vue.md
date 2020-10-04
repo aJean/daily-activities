@@ -215,6 +215,7 @@ render 函数可以直接渲染组件，h => h(App)
 入口在 src/instance/state.js 下的 initComputed
 核心是建立 render watcher - computed watcher - 依赖属性的关系网
 lazy 模式，watcher.evaluate 和 watcher.depend 都是专门给它使用的
+- 一个结论就是 evalute 的执行一定是在读取 computedGetter 时候，update 只会把 dirty 设置为 true
 
 #### nextTick
 异步执行，尽量使用微循环队列，当前版本的优先级顺序如下：Promise - MutationObserver - setImmediate - setTimeout
