@@ -5,36 +5,39 @@
 /******/ 		var moreModules = data[1];
 /******/ 		var executeModules = data[2];
 /******/
-/******/ 		// add "moreModules" to the modules object,
-/******/ 		// then flag all "chunkIds" as loaded and fire callback
+/******/ 		// 如果是一个加载好的 chunk，就把 chunk 状态设置成 0，同时拿到 chunk 的 resolve，__webpack_require__.e
 /******/ 		var moduleId, chunkId, i = 0, resolves = [];
 /******/ 		for(;i < chunkIds.length; i++) {
 /******/ 			chunkId = chunkIds[i];
 /******/ 			if(Object.prototype.hasOwnProperty.call(installedChunks, chunkId) && installedChunks[chunkId]) {
 /******/ 				resolves.push(installedChunks[chunkId][0]);
 /******/ 			}
+              // 设置 0 之后，再次遇到 import 这个 chunk，就会知道是已经加载过了
 /******/ 			installedChunks[chunkId] = 0;
 /******/ 		}
+
+            // 把打包传入的 moudle 缓存到内部数组
 /******/ 		for(moduleId in moreModules) {
 /******/ 			if(Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
 /******/ 				modules[moduleId] = moreModules[moduleId];
 /******/ 			}
 /******/ 		}
 /******/
-/******/    // 再把模块数据放到 jsonpArray 数组里
+/******/    // 这个作用是把数据放到 window["webpackJsonp"] 里，因为我们改写了 push，所以这里是调用原生的 push
 /******/ 		if(parentJsonpFunction) parentJsonpFunction(data);
-/******/
+/******/  
+            // 针对 async chunks，resolves 里都是 chunk 的 resolve 函数
 /******/ 		while(resolves.length) {
 /******/ 			resolves.shift()();
 /******/ 		}
 /******/
-/******/ 		// add entry modules from loaded chunk to deferred list
+/******/ 		// 加入入口模块
 /******/ 		deferredModules.push.apply(deferredModules, executeModules || []);
 /******/
 /******/ 		// 检查入口模块的执行
 /******/ 		return checkDeferredModules();
 /******/ 	};
-          // 比如这种 [id, factory, [["./src/esm.ts","runtime"]]]
+          // 比如这种 [id, modules, [["./src/esm.ts","runtime"]]]
           // id 是 chunkId，factory 模块函数主体，后面的数组表示入口模块，但是入口模块也会有依赖，runtime 就是一个基本依赖
 /******/ 	function checkDeferredModules() {
 /******/ 		var result;
@@ -45,10 +48,10 @@
 /******/ 				var depId = deferredModule[j];
 /******/ 				if(installedChunks[depId] !== 0) fulfilled = false;
 /******/ 			}
-/******/      // 依赖都加载了，执行入口模块的 module factory
+/******/      // 依赖都加载了，执行入口模块的 modules[id] 工厂函数
 /******/ 			if(fulfilled) {
 /******/ 				deferredModules.splice(i--, 1);
-                // 0 对应的就是 ./src/esm.ts
+                // 0 对应的就是 ./src/esm.ts，__webpack_require__ 就会执行 factory
 /******/ 				result = __webpack_require__(__webpack_require__.s = deferredModule[0]);
 /******/ 			}
 /******/ 		}
@@ -56,10 +59,10 @@
 /******/ 		return result;
 /******/ 	}
 /******/
-/******/ 	// The module cache
+/******/ 	// 执行过 factory 的 module，这里存的都是 exports
 /******/ 	var installedModules = {};
 /******/
-/******/ 	// object to store loaded and loading chunks
+/******/ 	// 存储动态加载的模块，这个对象只存储状态，为 _webpack_require__.e 提供判断依据，实际 module 还是都存在 modules 里
 /******/ 	// undefined = chunk not loaded, null = chunk preloaded/prefetched
 /******/ 	// Promise = chunk loading, 0 = chunk loaded
 /******/ 	var installedChunks = {
@@ -68,7 +71,7 @@
 /******/
 /******/ 	var deferredModules = [];
 /******/
-/******/ 	// script path function
+/******/ 	// 结合 public path 生成 chunk src
 /******/ 	function jsonpScriptSrc(chunkId) {
 /******/ 		return __webpack_require__.p + "" + ({}[chunkId]||chunkId) + ".chunk.js"
 /******/ 	}
@@ -163,20 +166,20 @@
 /******/ 		return Promise.all(promises);
 /******/ 	};
 /******/
-/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	// 导出所有的 modules
 /******/ 	__webpack_require__.m = modules;
 /******/
-/******/ 	// expose the module cache
+/******/ 	// 导出所有 require 执行过的 modules
 /******/ 	__webpack_require__.c = installedModules;
 /******/
-/******/ 	// define getter function for harmony exports
+/******/ 	// 定义属性的取值 getter
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
 /******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
 /******/ 		}
 /******/ 	};
 /******/
-/******/ 	// define __esModule on exports
+/******/ 	// 声明这个模块是 es module
 /******/ 	__webpack_require__.r = function(exports) {
 /******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
 /******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
@@ -200,7 +203,7 @@
 /******/ 		return ns;
 /******/ 	};
 /******/
-/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	// 获取非 esm 模块的 exports，用在 import 一个 commonjs 模块的场景
 /******/ 	__webpack_require__.n = function(module) {
 /******/ 		var getter = module && module.__esModule ?
 /******/ 			function getDefault() { return module['default']; } :
@@ -222,7 +225,8 @@
 /******/ 	var oldJsonpFunction = jsonpArray.push.bind(jsonpArray);
 /******/ 	jsonpArray.push = webpackJsonpCallback;
 /******/ 	jsonpArray = jsonpArray.slice();
-/******/  // 已经存在的模块
+
+          // 已经存在的模块
 /******/ 	for(var i = 0; i < jsonpArray.length; i++) webpackJsonpCallback(jsonpArray[i]);
 /******/ 	var parentJsonpFunction = oldJsonpFunction;
 /******/

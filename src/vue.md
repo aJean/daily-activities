@@ -124,12 +124,11 @@ render 函数可以直接渲染组件，h => h(App)
 
 #### createComponentInstanceForVnode
 - 生成 options 作为 new Ctor 的参数，这里有比较重要的属性 _parentVnode 和 parent 以及 isComponent
-- _parentVnode 就是当前这个组件的 vnode，parent 是当前的 this 在 _update 时候设置的
-- 返回 new vnode.componentOptions.Ctor，也就是用组件构造器生成 instance
-- 还记得 new Vue 会执行 _init 吗，如果 isComponent 是 true，就会执行 initInternalComponent，把上面的参数放到 vm.$options 上
-- 执行 initLifecycle 时候会处理 parent.$children 和 this.$parent，建立 instance 之间的关系
-- 再到执行 _render 时会给生成的 vnode 添加 parentVnode
-- 再然后在执行 patch 时候还会发现有子组件，这时候子组件就可以知道他的 parentVnode 和上级的 this context 了
+- _parentVnode 就是当前这个组件的占位 vnode，parent 是父组件的 this， 在上一次 _update 时候设置的
+- 返回 new vnode.componentOptions.Ctor()，也就是用组件构造器生成 instance
+- 实例化调用执行 _init，如果 isComponent 是 true，就会执行 initInternalComponent，把传给构造器的参数放到 vm.$options 上
+- 执行 initLifecycle 时候会创建 parent.$children 和 this.$parent，建立 instance 之间的关系
+- 然后流程一样，执行 _render 时会给生成的 component vnode 添加 parentVnode
 
 #### vm._vnode
 在 src/instance/lifecycle.js 的 _update 中赋值
@@ -191,7 +190,7 @@ created: src/instance/init.js - _init，可以看到触发 created 时候 initSt
 
 - 全局注册，所有组件中都可以用 Vue.component
 - 局部注册，通过 components: [] 参数，只在组件域下可用，比如业务组件
-- createElement 会对 tag 进行判断，这里传入的是 this.options，根据参数合并原则，全局注册和局部注册的 components 就都能被识别
+- createElement 会对 tag 进行判断，这里传入的是 this.options
 - 能被识别的 tag 有 dom 保留标签和 component
 - 还有个问题就是组件初始状态是一个 plainObject，经过 Vue.extend 后变成 Ctor，这个过程在 Vue.component 或 createComponent 中都会做
 - 然后 Vue 会把这个 Ctor 去替换原来的 Sub.options.components[id]，这样就保证同一个组件类只会执行一次 extend

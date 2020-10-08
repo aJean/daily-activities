@@ -251,7 +251,7 @@ render() {
 #### 动态导入
 为什么使用 addUmiExports api 新导入的模块，要在 umi dev 执行后才可以被 ts 识别 ?
 - tsconfig.json 里定义了 paths
-- 动态的模块会被写入 src/.umi/cire/umiExports.ts
+- 动态的模块会被写入 src/.umi/core/umiExports.ts
 - node_modules/umi 里面会导出 @@/core/umiExports
 - 所以新模块第一次导入需要 dev，主要是在插件执行时把 module url link 到 umiExports.ts 里面
 
