@@ -153,9 +153,9 @@ render 函数可以直接渲染组件，h => h(App)
 - update 时会执行 vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false)
 - 然后就是一个固定流程 patch - createElm - createComponent - createElement(tag)，遇到组件就继续递归执行
 - 当处理到 dom Vnode 的时候，会终止递归并创建 elm，然后通过 initComponent 把 elm 设置回去
-- 当流程返回到祖先的 dom Vnode 时候，执行挂载，因为 dom vnode 是通过 createChildren 创建子 vnode，而不是递归
-- 因为 createElm 发现不是组件 vnode，会执行 createElement(tag, vnode) 创建 elm
-- 而对于 children vnode 来说，它们的 parentElm 就是这个 elm！！
+- 流程返回到祖先的 dom Vnode 时候，执行挂载，因为 dom vnode 是通过 createChildren 创建子 vnode，而不是递归
+- 如果 createElm 发现不是组件 vnode，会执行 document.createElement(tag, vnode) 创建 elm
+- 对于 children vnode 来说，它们的 parentElm 就是这个 elm！！
 
 #### 节点挂载
 总结一下就是 dom vnode 在 createElm 内部执行挂载，component vnode 在 createComponent 内部执行挂载
@@ -178,12 +178,12 @@ render 函数可以直接渲染组件，h => h(App)
 
 #### 生命周期
 业务中最常用的几个生命周期函数
-updated: src/observer/scheduler.js - flushSchedulerQueue
+updated: src/observer/scheduler.js - callUpdatedHooks
 destroyed: src/instance/lifecycle.js - $destroy
 mounted: src/instance/lifecycle.js - mountComponent
 created: src/instance/init.js - _init，可以看到触发 created 时候 initState 已经执行完了，也就是 data observe 完成
 
-- before 和 crreated 触发顺序是先父后子，updated、mounted、destroyed 是先子后父
+- before 和 created 触发顺序是先父后子，updated、mounted、destroyed 是先子后父
 
 #### 组件注册
 代码在 src/global-api/assets.js
