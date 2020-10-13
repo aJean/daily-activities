@@ -3,7 +3,8 @@ Vue 有两种配置，config、options，都可以做全局设置
 
 #### options
 Vue.options 会 在 _init 的 mergeOptions 的时候与组件 options 合并，并传给组件的构造器
-- 资产配置，components 注册组件、filter 过滤器、directive 指令
+- 资产配置，components 注册组件、filters 过滤器、directives 指令
+- 延伸一下，directive 用于处理 dom 行为、filters 用于处理属性值
 
 #### config
 全局配置，这个不会传给组件，会被内部的方法使用

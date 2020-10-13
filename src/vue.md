@@ -180,7 +180,7 @@ render 函数可以直接渲染组件，h => h(App)
 业务中最常用的几个生命周期函数
 updated: src/observer/scheduler.js - callUpdatedHooks
 destroyed: src/instance/lifecycle.js - $destroy
-mounted: src/instance/lifecycle.js - mountComponent
+mounted: src/instance/lifecycle.js - mountComponent， src/core/vdom/create-component.js - insert
 created: src/instance/init.js - _init，可以看到触发 created 时候 initState 已经执行完了，也就是 data observe 完成
 
 - before 和 created 触发顺序是先父后子，updated、mounted、destroyed 是先子后父
