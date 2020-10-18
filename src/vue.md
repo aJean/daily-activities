@@ -235,6 +235,7 @@ created: src/instance/init.js - _init，可以看到触发 created 时候 initSt
 lazy 模式，watcher.evaluate 和 watcher.depend 都是专门给它使用的
 
 - 一个结论就是 evalute 的执行一定是在读取 computedGetter 时候，update 只会把 dirty 设置为 true
+- 依赖属性 set 触发 computed watcher 设置 dirty，然后 render watcher 更新，读取 computed 属性触发 evalute
 
 #### nextTick
 异步执行，尽量使用微循环队列，当前版本的优先级顺序如下：Promise - MutationObserver - setImmediate - setTimeout
@@ -251,7 +252,7 @@ Vue 通过巧妙的利用 dep，解决这个问题
 - Vue.set，这个方法利用了 ob.dp.notify() 触发了 render watcher 的更新
 - ob.dp 是啥？当使用 observe 监听对象时候，会 new Observer(value)，同时设置 value.__ob__ = this
 - 可以理解为对象级别的依赖，如果 defineReactive 的 value 是一个对象，那么会做深度的递归 ob = observe(value)
-- 同时在 get 时候，如果存在 ob，那么会执行 ob.dep.depend() 收集依赖，这里和属性一样都是同一个 render watcher
+- watcher get 时候，如果存在 value ob，那么会执行 ob.dep.depend() 收集依赖，这里和属性一样都是同一个 render watcher
 - Vue.set 会获取 value.__ob__ 也就是 ob，然后执行 ob.dp.notify()，触发更新
 
 #### 思考
