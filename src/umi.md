@@ -63,11 +63,21 @@ umi 有非常强大的插件系统，开发者可以自己定制 node 插件或�
 #### 插件注册
 - api.register 注册编译期的插件，可以指定 key
 - api.addRuntimePlugin 注册运行时插件，可以再通过 addRuntimePluginKey 注册 key，key 会关联 export
+- validKeys 就是 addRuntimePluginKey 注册的所有 key，运行时插件必须 export validKeys 注册的属性
 - 运行时插件集中在 src/.umi/core/plugin.ts 内，创建 plugin 对象
 - plugin 对象会加载所有注册的运行时插件，执行的时通过 export key 去查找
 - 运行时 ApplyPluginsType.compose vs 编译时 ApplyPluginsType.add
 
 ```javascript
+// preset-built-in/src/plugins/generateFiles/core/plugin.ts 负责运行时的插件组装，生成 .umi/core/plugin.ts
+// 收集 validKeys
+const validKeys = await api.applyPlugins({
+  key: 'addRuntimePluginKey',
+  type: api.ApplyPluginsType.add,
+  initialValue: ['patchRoutes', 'rootContainer', 'render', 'onRouteChange'],
+});
+
+
 // umi/packages/runtime/plugin/plugin.ts
 register(plugin: IPlugin) {
   // 遍历 require('/Users/kenzoss/Sites/primary-user-growth-h5/src/app.ts') 的 export key
@@ -115,14 +125,15 @@ generateHistory 是放在 umi-build-dev 里面处理的
 - 使用 registerCommand 注册 umi dva 命令
 
 ```javascript
-// export const dva，定义在 plugin-dva/src/dva.tpl
-plugin.applyPlugins({
+// export const dva，收集用户定义的 dva 参数，定义在 plugin-dva/src/dva.tpl
+const runtimeDva = plugin.applyPlugins({
   key: 'dva',
   type: ApplyPluginsType.modify,
   initialValue: {},
 });
 
-// export function patchRoutes，定义在 src/.umi/core/routes.ts
+// export function patchRoutes，触发是在 src/.umi/core/routes.ts
+// 在生成路由配置后给用户去修改路由的机会
 plugin.applyPlugins({
   key: 'patchRoutes',
   type: ApplyPluginsType.event,
@@ -216,9 +227,12 @@ t.isObjectExpression(node) && node.properties.some(property => {
 
 #### 如何确定渲染元素
 插件之间相互隔离，render element 只有在运行时才确定，方案就是将 contaner 缓存，在运行时组合起来渲染
-- 在 plugin-dva/dva.ts 里面的 _DvaContainer 并不知道要渲染到哪里，所以它执行 dva.start 时没有传 selector
-- 根据 dva 源码，如果没有传入 selector，只返回 react jsx 对象
-- 在 umi.ts 执行 renderClient 时传入 rootElement: 'root' 也就是渲染容器
+在 plugin-dva/dva.ts 里面的 _DvaContainer 并不知道要渲染到哪里，所以它执行 dva.start 时没有传 selector
+根据 dva 源码，如果没有传入 selector，只返回 react jsx 对象
+- 将 plugin-dva/runtime.tsx 注册为运行时插件，key 是 rootContainer
+- 在 umi.ts 执行 renderClient 的时候 apply rootContainer 插件，将返回值作为 rootContainer
+- 创建 router component 作为 rootContainer 的 initValue，将收集的 history、routes 配置作为 props
+- 最后执行 ReactDOM.render(rootContainer, rootElement)，rootElement: 'root' 也就是渲染容器
 
 ```javascript
 // dva.start
@@ -253,16 +267,21 @@ render() {
 - tsconfig.json 里定义了 paths
 - 动态的模块会被写入 src/.umi/core/umiExports.ts
 - node_modules/umi 里面会导出 @@/core/umiExports
-- 所以新模块第一次导入需要 dev，主要是在插件执行时把 module url link 到 umiExports.ts 里面
+- 所以新模块第一次导入需要 run dev，主要是在插件执行时把 module url link 到 umiExports.ts 里面
 
 ```javascript
-// node_modules/umi/index.js
-let ex = require('./lib/cjs');
-try {
-  const umiExports = require('@@/core/umiExports');
-  ex = Object.assign(ex, umiExports);
-} catch (e) {}
-module.exports = ex;
+// node_modules/umi/lib/index.js
+var _umiExports = require("@@/core/umiExports");
+
+Object.keys(_umiExports).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _umiExports[key];
+    }
+  });
+});
 ```
 
 -------------------------------
@@ -391,7 +410,7 @@ if (!routes) {
 
 #### service.init
 初始化工作，我们配置的插件的同步代码都是在这里执行的
-- initPresetsAndPlugins，执行所有 插件集 与 插件!!
+- initPresetsAndPlugins，执行所有 插件集 与 插件的初始化，传入代理过的 api 对象
 - 将以 plugin id 为存储维度的 hooksByPluginId 转化为以 key 存储的 hooks!!
 - 执行一些修改 config 相关的 hook，生成 umi 的 config，我们插件里注册的 modifyConfig、modifyPaths 都会在这一步执行!!
 
@@ -424,8 +443,8 @@ register(hook: IHook) {
 ```
 
 #### service.getPluginAPI
-每一个插件、插件集拿到的 api 对象是不同的
-- plugin id 会保存在 PluginApi 对象上，对插件本身无感之
+每一个插件、插件集拿到的 api 对象是不同的，但 service 实例都是一个，所以注册都是注册到相同的 service 上
+- plugin id 会保存在 PluginApi 对象上，对插件本身无感知
 - 插件内部执行 api.register 都会注册到自己的 id 上
 - 每个插件的 hook 都会保存在自己的 id 下，但是运行时候是以 key 来拉通运行的，这跟 runtimePlugin 行为一致
 
@@ -438,6 +457,7 @@ register(hook: IHook) {
 initPlugin(plugin: IPlugin) {
   // resolvePlugins 时会读取 plugin path，生成 plugin id
   const { id, key, apply } = plugin;
+  // service instance 相同，所以注册信息都是同一个地方，因此这里需要传入 id 做区分
   const api = this.getPluginAPI({ id, key, service: this });
 
   // register before apply
@@ -473,6 +493,23 @@ async init() {
 #### registerCommand
 - 把命令函数存储到 this.service.commands 数组中
 - 在 runCommand 时取出来调用
+
+#### registerMethod
+注册一个方法，默认行为是提供一个便捷的插件注册调用，不需要传 key
+很多插件都直接使用 onGenerateFiles 注册执行 generateFiles 时候会触发的 hooks 就是一个最直接的例子
+- preset-built-in/plugins/registerMethods.ts 里有非常多的便捷方法注册
+
+```javascript
+// 没有传 fn，那么走默认逻辑，生成一个便捷的注册 modifyConfig 插件的调用
+api.registerCommand('modifyConfig');
+// 执行插件注册
+api.modifyConfig(memo => memo);
+// 触发插件
+api.applyPlugins({
+  key: 'modifyConfig',
+  type: this.ApplyPluginsType.modify,
+})
+```
 
 #### addTmpGenerateWatcherPaths
 这是监控文件夹的方法，内部通过 registerMethod 注册
@@ -547,3 +584,4 @@ watch(opts: {
 umi 内部也是基于它的插件体系做开发扩展的
 - 微内核模式架构，core 定义骨架，功能全部由插件方式集成，相互解耦、扩展性强
 - 可以看下 umi/packages/preset-built-in/plugins/generateFiles，都是对于 onGenerateFiles 事件的应用
+- umi 把很多重要的生产逻辑都分离到了 plugins/generateFiles 中去处理，比如创建入口文件，生成 .umi/core 目录和文件
