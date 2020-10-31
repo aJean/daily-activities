@@ -169,6 +169,19 @@ plugin.applyPlugins({
   args,
 })
 
+// 拿到所有注册的运行时 plugin，umi/packages/preset-built-in/src/plugins/generateFiles/core/plugin.ts
+const plugins = await api.applyPlugins({
+  key: 'addRuntimePlugin',
+  type: api.ApplyPluginsType.add,
+  initialValue: [
+    getFile({
+      base: paths.absSrcPath!,
+      fileNameWithoutExt: 'app',
+      type: 'javascript',
+    })?.path,
+  ].filter(Boolean),
+});
+
 // 实际的渲染执行函数，定义在 @umijs/remder-react/dist/index.js
 function renderClient(opts) {
   // 此时 rootContainer 已经 wrap 了 _DvaContainer
