@@ -462,7 +462,7 @@ register(hook: IHook) {
 - 每个插件的 hook 都会保存在自己的 id 下，但是运行时候是以 key 来拉通运行的，这跟 runtimePlugin 行为一致
 
 #### service.hooksByPluginId
-- 插件、插件集都是使用 id 存储的，插件里 register 的 hook 都会保存在插件 id 下面
+- 需要 applyPlugins 执行的插件都保存在 service.hooksByPluginId[pluginId] 里面
 - 在初始化阶段收集结束之后会将 hooksByPluginId 映射到 hooks
 
 ```javascript
@@ -501,6 +501,20 @@ async init() {
   });
   ...
 }
+```
+
+#### preset 和 plugin
+从官方的代码来看 preset 是处理与构建功能相关的插件
+而 plugin 是处理一些 webpack 配置 的插件，相对来说比较简单，比如 umiAlias
+```javascript
+export default (api: IApi) => {
+  api.chainWebpack((memo) => {
+    if (process.env.UMI_DIR) {
+      memo.resolve.alias.set('umi', process.env.UMI_DIR);
+    }
+    return memo;
+  });
+};
 ```
 
 #### registerCommand
