@@ -283,18 +283,13 @@ render() {
 - 所以新模块第一次导入需要 run dev，主要是在插件执行时把 module url link 到 umiExports.ts 里面
 
 ```javascript
-// node_modules/umi/lib/index.js
-var _umiExports = require("@@/core/umiExports");
-
-Object.keys(_umiExports).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _umiExports[key];
-    }
-  });
-});
+// umijs/packages/umi/index.js
+let ex = require('./lib/cjs');
+try {
+  const umiExports = require('@@/core/umiExports');
+  ex = Object.assign(ex, umiExports);
+} catch (e) {}
+module.exports = ex;
 ```
 
 -------------------------------
@@ -414,6 +409,22 @@ if (!routes) {
 - 加载内部插件集 preset-built-in，又会加载其他内部插件比如 renderer-react
 - 加载内部插件 ./plugins/umiAlias
 
+
+#### service constructor
+主要的工作是将外部传入的 presets 转化为 js 可识别格式
+- 相关的工具方法在 core/service/pluginUtils.ts，关键是生成一个 apply 函数
+```javascript
+apply() {
+  try {
+    // absolute plugin file path
+    const ret = require(path);
+    return compatESModuleRequire(ret);
+  } catch (e) {
+    throw new Error(`Register ${type} ${path} failed, since ${e.message}`);
+  }
+}
+```
+
 #### service.run
 运行内置命令，build、dev、dva 等
 - await service.init，执行初始化
@@ -523,7 +534,7 @@ export default (api: IApi) => {
 
 #### registerMethod
 注册一个方法，默认行为是提供一个便捷的插件注册调用，不需要传 key
-很多插件都直接使用 onGenerateFiles 注册执行 generateFiles 时候会触发的 hooks 就是一个最直接的例子
+很多插件都直接使用, 比如 onGenerateFiles、modifyBundleConfig
 - preset-built-in/plugins/registerMethods.ts 里有非常多的便捷方法注册
 
 ```javascript
