@@ -106,6 +106,22 @@ generateHistory 是放在 umi-build-dev 里面处理的
 
 -------------------------------
 
+### umi config
+不论是 .umirc.ts，还是 config 目录， 最终的目的只有一个，生成 webpack config 进行代码的构建
+
+#### getBundleAndConfigs
+源码在 umi/packages/preset-built-in/src/plugins/commands/buildDevUtils.ts
+调用在 preset-built-in/plugins/commands 的 dev 和 build，用于生成 bundle 对象和 config
+- bundler 就是 umi/packages/bundler-webpack，还没深入看，是对 webpack node api 的封装
+- bundler-webpack/getConfig 会使用 webpack-chain 创建 config 对象，在很多插件里都会做修改
+- 传给 bundle.getConfig 的 getConfigOpts 由多个部分组成，
+
+#### Bundle
+基于 webpack 封装的 Bundle 类
+umi 提供了 modifyBundler 类型的插件，插件对其进行扩展
+
+-------------------------------
+
 ### plugin-dva
 主要作用是注册 models 与 routes，配置 hmr 和 immr
 - 创建配置描述信息，用于 defineConfig
