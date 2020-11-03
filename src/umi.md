@@ -368,6 +368,19 @@ export function useModel<T extends keyof Model<T>, U>(
 }
 ```
 
+- defineConfig 配置约束
+```javascript
+import { IConfigFromPlugins } from '@@/core/pluginConfig';
+
+// api.describe 通过 jni 约束的配置会写入 .umi/core/pluginConfig.d.ts
+// 所以插件里面定义的配置，都可以在这里被 typescript 找到
+export function defineConfig(
+  config: IConfigFromPlugins | IConfig,
+): IConfigFromPlugins | IConfig {
+  return config;
+}
+```
+
 -------------------------------
 
 ### 路由
