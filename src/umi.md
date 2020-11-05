@@ -505,6 +505,7 @@ register(hook: IHook) {
 将 presets path 处理为 preset obj，为每一个 preset 生成唯一 id
 - 关键方法是 pathToObj：core/src/Service/utils/pluginUtils.ts 
 - id 有什么用？ 首先同一个文件内的插件会保存在 hooksByPluginId[id] 这个 list 下
+- id 是什么？可以宏观上认为就是 preset file path
 - 然后 service.plugins 里面还会以 id 保存原始的 preset obj
 - 执行 applyPlugins 的时候会使用 isPluginEnable 判断插件是否开启
 - isPluginEnable 会使用 service.plugins，所以插件是以 id 为维度来判断的
