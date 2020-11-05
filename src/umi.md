@@ -501,6 +501,14 @@ register(hook: IHook) {
 - 插件内部执行 api.register 都会注册到自己的 id 上
 - 每个插件的 hook 都会保存在自己的 id 下，但是运行时候是以 key 来拉通运行的，这跟 runtimePlugin 行为一致
 
+#### resolvePresets
+将 presets path 处理为 preset obj，为每一个 preset 生成唯一 id
+- 关键方法是 pathToObj：core/src/Service/utils/pluginUtils.ts 
+- id 有什么用？ 首先同一个文件内的插件会保存在 hooksByPluginId[id] 这个 list 下
+- 然后 service.plugins 里面还会以 id 保存原始的 preset obj
+- 执行 applyPlugins 的时候会使用 isPluginEnable 判断插件是否开启
+- isPluginEnable 会使用 service.plugins，所以插件是以 id 为维度来判断的
+
 #### service.hooksByPluginId
 - 需要 applyPlugins 执行的插件都保存在 service.hooksByPluginId[pluginId] 里面
 - 在初始化阶段收集结束之后会将 hooksByPluginId 映射到 hooks
