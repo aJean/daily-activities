@@ -112,9 +112,22 @@ generateHistory 是放在 umi-build-dev 里面处理的
 #### getBundleAndConfigs
 源码在 umi/packages/preset-built-in/src/plugins/commands/buildDevUtils.ts
 调用在 preset-built-in/plugins/commands 的 dev 和 build，用于生成 bundle 对象和 config
-- bundler 就是 umi/packages/bundler-webpack，还没深入看，是对 webpack node api 的封装
-- bundler-webpack/getConfig 会使用 webpack-chain 创建 config 对象，在很多插件里都会做修改
-- 传给 bundle.getConfig 的 getConfigOpts 由多个部分组成，
+- getBundleAndConfigs - buildDevUtils - Bundler - getConfig
+- Bundler 就是 umi/packages/bundler-webpack，是对 webpack node api 的封装
+- 首先用 core/service 里面收集到的 .umirc 进行 Bundler 实例化
+- 执行 getConfig - bundle.getConfig，使用初始配置结合插件各自的配置，生成 webpack config
+- 传给 bundle.getConfig 的 getConfigOpts 由多个部分组成，这里会提供执行内部插件的方法，比如 modifyBabelPresetOpts
+- bundle.getConfig 会使用 webpack-chain 创建 config 对象，执行 getConfigOpts 的插件勾子，触发内部插件挂载的方法
+- 返回 bundler, bundleConfigs, bundleImplementor 给 dev 或者 build 使用
+
+#### 修改配置的 hook
+体现了 umi 的 config 收集机制
+- modifyConfig 修改 .umirc 里面的初始配置，core/service
+- modifyBundleConfigOpts 修改传给 webpack-chain 之前的参数
+- modifyBabelOpts吗，插件修改 babel
+- modifyBabelPresetOpts，插件修改 babel preset
+- chainWebpack，插件修改 webpack config
+- modifyBundleConfig 修改 toConfig() 拿到的 webpack config json obj
 
 #### Bundle
 基于 webpack 封装的 Bundle 类
@@ -384,7 +397,7 @@ export function useModel<T extends keyof Model<T>, U>(
 }
 ```
 
-- defineConfig 配置约束
+- defineConfig 配置约束（packages/umi/src/defineConfig.ts）
 ```javascript
 import { IConfigFromPlugins } from '@@/core/pluginConfig';
 
