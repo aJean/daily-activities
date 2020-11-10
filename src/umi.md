@@ -122,10 +122,11 @@ generateHistory 是放在 umi-build-dev 里面处理的
 
 #### 修改配置的 hook
 体现了 umi 的 config 收集机制
-- modifyConfig 修改 .umirc 里面的初始配置，core/service
-- modifyBundleConfigOpts 修改传给 webpack-chain 之前的参数
-- modifyBabelOpts吗，插件修改 babel
-- modifyBabelPresetOpts，插件修改 babel preset
+- core/config/ 收集 env、.umirc、和插件的 describe
+- core/service/ modifyConfig 修改 .umirc 里面的初始配置
+- buildDevUtils/ modifyBundleConfigOpts 修改传给 webpack-chain 之前的参数
+- buildDevUtils/ modifyBabelOpts吗，插件修改 babel
+- buildDevUtils/ modifyBabelPresetOpts，插件修改 babel preset
 - chainWebpack，插件修改 webpack config
 - modifyBundleConfig 修改 toConfig() 拿到的 webpack config json obj
 
