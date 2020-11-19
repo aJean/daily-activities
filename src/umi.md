@@ -272,12 +272,18 @@ t.isObjectExpression(node) && node.properties.some(property => {
 插件之间相互隔离，render element 只有在运行时才确定，方案就是将 contaner 缓存，在运行时组合起来渲染
 在 plugin-dva/dva.ts 里面的 _DvaContainer 并不知道要渲染到哪里，所以它执行 dva.start 时没有传 selector
 根据 dva 源码，如果没有传入 selector，只返回 react jsx 对象
-- 将 plugin-dva/runtime.tsx 注册为运行时插件，key 是 rootContainer
+- 将 plugin-dva/runtime.tsx 注册为运行时插件，key 是 rootContainer，返回值就是 _dvaContainer
 - 在 umi.ts 执行 renderClient 的时候 apply rootContainer 插件，将返回值作为 rootContainer
-- 创建 router component 作为 rootContainer 的 initValue，将收集的 history、routes 配置作为 props
+- 创建 routerComponent 作为 rootContainer 的 initValue，将收集的 history、routes 配置作为 props
 - 最后执行 ReactDOM.render(rootContainer, rootElement)，rootElement: 'root' 也就是渲染容器
 
 ```javascript
+// plugins-dva runtime.tpl
+// 这个 container 就是 renderClient 创建的 routerComponent
+export function rootContainer(container) {
+  return React.createElement(_DvaContainer, null, container);
+}
+
 // dva.start
 function start(container) {
   // 根据container找到对应的DOM节点
