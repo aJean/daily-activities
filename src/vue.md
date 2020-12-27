@@ -215,7 +215,7 @@ created: src/instance/init.js - _init，可以看到触发 created 时候 initSt
 执行队列 watcher 更新，这里有几个重要的步骤
 为啥会有顺序呢，因为 vue 在 _init 里执行 initState、initComputed、和 initWatch，所以这两个 watcher 都在 render watcher 之前创建
 
-- 排序，确保 watcher 的执行按照 id 顺序，从小到大，也就是从父组件到子组件，user watcher 先与 render watcher
+- 排序，确保 watcher 的执行按照 id 顺序，从小到大，也就是从父组件到子组件，user watcher 先于 render watcher
 - 执行完成后要 resetSchedulerState 恢复状态
 - 还要对 render watcher 执行 updated 生命周期
 
