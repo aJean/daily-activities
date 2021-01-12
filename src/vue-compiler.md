@@ -44,3 +44,11 @@ matched 属性是一个数组，保存了路径上的所有 record
 
 ### vuex
 全局的状态管理，包括 state 声明、action 业务逻辑处理、 mutation 追踪
+
+### 构建
+vue 的 entry 是从 platform 中产生的
+
+#### runtime
+通过平台的 node-ops 和 modules 生成 patch
+定义最基础的 $mount, __patch__
+不同的模式 runtime-only，runtime-compiler 会再对 $mount 进行修改

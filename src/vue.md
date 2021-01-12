@@ -204,7 +204,9 @@ created: src/instance/init.js - _init，可以看到触发 created 时候 initSt
 - 这个时候就可以拿到 factory.resolved，就和之前组件处理一样的流程了
 
 ### watcher 更新
-响应式原理：发布订阅模式，可观察对象 data，观察者是 watcher
+响应式原理：发布订阅模式，可观察对象 data，观察者是 watcher，一定要理解 watcher 是用来相应 data 变化的东西
+那么如何去相应？就是把 watcher 添加到 data 的 dep 里面去
+普通 watcher 实例化的时候就会执行 get，读取 vm.key 去收集依赖，渲染 watcher 实例化时候执行 updateComponent，内部再去收集
 
 - 对于 computed watcher，只需要设置 this.dirty = true，这样可以保证模板读取这个属性时会重新执行 evaluate
 - 对于 render watcher 和 user watcher，一般使用异步模式，加入到 queueWatcher 队列，统一使用 nextTick 更新
@@ -264,7 +266,7 @@ vue 的 diff 是精准更新，我们来看看这个过程比 react 优化在什
 - updateChildComponent 里面会把父组件已经变化的 propsData 拿到，给子组件 instance 的 vm._props 赋值
 - 我们知道 initState - initProps 的时候会把 $options.props 进行 defineReactive 并放到 vm._props 上
 - 那么当执行 vm._props 属性 setter 时候，就会触发子组件的 render watcher！！
-- 结论很明显，vue 只有子组件使用了 props 时候，并且 props 变化了，才会触发子组件的更新
+- 结论很明显，vue 只有子组件使用了 props 时候，并且 props 变化了，才会触发子组件的更新（传给子组件的 props 就是编译出的 render function 的参数）
 - 反观 react setState 时候无法知道哪些数据变化了，只能触发整个 vdom 的 diff，子组件内是需要开发者自己 scu 优化的
 
 ### 组件更新
