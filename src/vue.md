@@ -204,7 +204,7 @@ created: src/instance/init.js - _init，可以看到触发 created 时候 initSt
 - 这个时候就可以拿到 factory.resolved，就和之前组件处理一样的流程了
 
 ### watcher 更新
-响应式原理：发布订阅模式，可观察对象 data，观察者是 watcher，一定要理解 watcher 是用来相应 data 变化的东西
+响应式原理：发布订阅模式，可观察对象 data，观察者是 watcher，一定要理解 watcher 是用来响应 data 变化的东西
 那么如何去相应？就是把 watcher 添加到 data 的 dep 里面去
 普通 watcher 实例化的时候就会执行 get，读取 vm.key 去收集依赖，渲染 watcher 实例化时候执行 updateComponent，内部再去收集
 
