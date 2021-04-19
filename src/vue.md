@@ -29,7 +29,7 @@ dev 环境对 vm._renderProxy 设置代理，在访问未定义属性时给予�
 #### initState
 会处理 vm 上的属性，比如 data、props、methods、watcher、computed
 - methods 里的 fn 直接挂载到 vm 上
-- props 通过 proxy _props 代理到 vm
+- props 通过 proxy _props 代理到 vm，这样做是为了在 renderFunction 中直接 with(this) 就可以拿到所有属性和数据
 - data 通过 proxy _data 代理到 vm
 - 对 data 进行响应式处理，就是执行 observe
 
@@ -232,12 +232,12 @@ created: src/instance/init.js - _init，可以看到触发 created 时候 initSt
 - 所以每次变更都会重新进行依赖收集，在 watcher.get 中 cleanupDeps 清除旧依赖是合理的做法
 
 #### computed watcher
-入口在 src/instance/state.js 下的 initComputed
+入口在 src/instance/state.js 下的 initComputed，分为两步：1.创建 watcher 传入依赖属性表达式，2.defineReactive 定义属性 key
 核心是建立 render watcher - computed watcher - 依赖属性的关系网
 lazy 模式，watcher.evaluate 和 watcher.depend 都是专门给它使用的
 
-- 一个结论就是 evalute 的执行一定是在读取 computedGetter 时候，update 只会把 dirty 设置为 true
-- 依赖属性 set 触发 computed watcher 设置 dirty，然后 render watcher 更新，读取 computed 属性触发 evalute
+- evalute 的执行一定是在读取 computedGetter 时候
+- 依赖属性变化触发的 update 只会把 dirty 设置为 true
 
 #### nextTick
 异步执行，尽量使用微循环队列，当前版本的优先级顺序如下：Promise - MutationObserver - setImmediate - setTimeout
