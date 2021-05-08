@@ -238,6 +238,7 @@ lazy 模式，watcher.evaluate 和 watcher.depend 都是专门给它使用的
 
 - evalute 的执行一定是在读取 computedGetter 时候
 - 依赖属性变化触发的 update 只会把 dirty 设置为 true
+- computed key 的 getter 不会收集依赖，只是从 computed watcher 中取值
 
 #### nextTick
 异步执行，尽量使用微循环队列，当前版本的优先级顺序如下：Promise - MutationObserver - setImmediate - setTimeout
