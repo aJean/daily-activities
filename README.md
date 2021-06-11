@@ -1,1 +1,1 @@
-gitpages + issue
+issues
