@@ -11,7 +11,7 @@
 /******/ 		for(;i < chunkIds.length; i++) {
 /******/ 			chunkId = chunkIds[i];
 /******/ 			if(Object.prototype.hasOwnProperty.call(installedChunks, chunkId) && installedChunks[chunkId]) {
-/******/ 				resolves.push(installedChunks[chunkId][0]);
+/******/ 				resolves.push(installedChunks[chunkId][0]); // 0 resolve 1 reject 2 promise
 /******/ 			}
 /******/ 			installedChunks[chunkId] = 0;
 /******/ 		}
@@ -201,7 +201,7 @@
 /******/ 	// eslint-disable-next-line no-unused-vars
 /******/ 	function hotCreateModule(moduleId) {
 /******/ 		var hot = {
-/******/ 			// private stuff
+/******/ 			// private stuff，热更新依赖
 /******/ 			_acceptedDependencies: {},
 /******/ 			_declinedDependencies: {},
 /******/ 			_selfAccepted: false,
