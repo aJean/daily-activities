@@ -52,6 +52,7 @@
 /******/ 			if(fulfilled) {
 /******/ 				deferredModules.splice(i--, 1);
                 // 0 对应的就是 ./src/esm.ts，__webpack_require__ 就会执行 factory
+                // 0 是启动的模块，后面是依赖，先检查依赖全部 fulfilled，在执行 0
 /******/ 				result = __webpack_require__(__webpack_require__.s = deferredModule[0]);
 /******/ 			}
 /******/ 		}
