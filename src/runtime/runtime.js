@@ -13,6 +13,7 @@
 /******/ 				resolves.push(installedChunks[chunkId][0]);
 /******/ 			}
               // 设置 0 之后，再次遇到 import 这个 chunk，就会知道是已经加载过了
+              // chunk 是打包后的文件 id
 /******/ 			installedChunks[chunkId] = 0;
 /******/ 		}
 
