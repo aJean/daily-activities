@@ -19,6 +19,7 @@
             // 把打包传入的 moudle 缓存到内部数组
 /******/ 		for(moduleId in moreModules) {
 /******/ 			if(Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
+                // 存储的是原始代码，require 后会存储到 installedModules 上面
 /******/ 				modules[moduleId] = moreModules[moduleId];
 /******/ 			}
 /******/ 		}
@@ -164,6 +165,9 @@
 /******/ 				document.head.appendChild(script);
 /******/ 			}
 /******/ 		}
+
+            //  __webpack_require__.e(0).then(__webpack_require__.bind(null, 1))
+            // 还要通过编译加入对 module 的 require，因为这是已经执行了 jsonpCallback，所以直接 require id 即可
 /******/ 		return Promise.all(promises);
 /******/ 	};
 /******/

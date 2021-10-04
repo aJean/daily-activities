@@ -422,6 +422,8 @@
 /******/ 						moduleId: moduleId
 /******/ 					};
 /******/ 				}
+
+                // 从更新的模块向上 accept callback 并执行
 /******/ 				for (var i = 0; i < module.parents.length; i++) {
 /******/ 					var parentId = module.parents[i];
 /******/ 					var parent = installedModules[parentId];
