@@ -53,6 +53,7 @@
 /******/ 		delete installedChunks[chunkId];
 /******/ 	}
 /******/ 	var parentHotUpdateCallback = window["webpackHotUpdate"];
+          // 下载了新的 chunk 就会执行这个方法, webpackHotUpdate(id, module)
 /******/ 	window["webpackHotUpdate"] = // eslint-disable-next-line no-unused-vars
 /******/ 	function webpackHotUpdateCallback(chunkId, moreModules) {
 /******/ 		hotAddUpdateChunk(chunkId, moreModules);
@@ -380,7 +381,8 @@
 /******/ 			deferred.resolve(outdatedModules);
 /******/ 		}
 /******/ 	}
-/******/
+/******/  
+          // 执行 accept 失败会回退到 reload，代码在 devserver 中
 /******/ 	function hotApply(options) {
 /******/ 		if (hotStatus !== "ready")
 /******/ 			throw new Error("apply() is only allowed in ready status");
@@ -423,7 +425,7 @@
 /******/ 					};
 /******/ 				}
 
-                // 从更新的模块向上 accept callback 并执行
+                // 从更新的模块向上查找 accept handler
 /******/ 				for (var i = 0; i < module.parents.length; i++) {
 /******/ 					var parentId = module.parents[i];
 /******/ 					var parent = installedModules[parentId];
@@ -456,7 +458,7 @@
 /******/ 				type: "accepted",
 /******/ 				moduleId: updateModuleId,
 /******/ 				outdatedModules: outdatedModules,
-/******/ 				outdatedDependencies: outdatedDependencies
+/******/ 				outdatedDependencies: outdatedDependencies // 模块链路上的 accept handler
 /******/ 			};
 /******/ 		}
 /******/
@@ -614,7 +616,7 @@
 /******/ 			// disable module (this disables requires from this module)
 /******/ 			module.hot.active = false;
 /******/
-/******/ 			// remove module from cache
+/******/ 			// 删除旧的模块缓存
 /******/ 			delete installedModules[moduleId];
 /******/
 /******/ 			// when disposing there is no need to call dispose handler
@@ -662,7 +664,7 @@
 /******/ 			}
 /******/ 		}
 /******/
-/******/ 		// call accept handlers
+/******/ 		// call accept handlers，执行 accept handler
 /******/ 		var error = null;
 /******/ 		for (moduleId in outdatedDependencies) {
 /******/ 			if (
