@@ -82,7 +82,7 @@
 /******/ 	// The require function，把 installedChunks 缓存到 installedModules
 /******/ 	function __webpack_require__(moduleId) {
 /******/
-/******/ 		// Check if module is in cache
+/******/ 		// Check if module is in cache，是否执行过 module factory
 /******/ 		if(installedModules[moduleId]) {
 /******/ 			return installedModules[moduleId].exports;
 /******/ 		}
@@ -94,7 +94,7 @@
 /******/ 		};
 /******/
 /******/ 		// Execute the module function
-            // module 和 module.exports 都会作为参数传给编译过的  wrap function
+            // module 和 module.exports 都会作为参数传给编译过的 wrap function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 /******/
 /******/ 		// Flag the module as loaded
