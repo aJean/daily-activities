@@ -1,55 +1,50 @@
 /**
  * @file 状态模式，内部状态调度，关注状态的变化
- *       与策略模式区别主要在于状态的变化又内部控制 Context 状态管理
+ *       与策略模式区别主要在于状态之间可能会耦合调用，并且状态本身是逻辑需要关注的信息
  */
 
 interface State {
   name: string;
-  handle(): void;
+  handle(context: ContextControl): void;
 }
 
-class PreState {
+class PreState implements State {
   name = 'pre';
 
-  handle() {
+  handle(context: ContextControl) {
     console.log(this.name);
+    context.setState(new NxtState()); // 状态 a 会切换到状态 b
   }
 }
 
-class NxtState {
+class NxtState implements State {
   name = 'nxt';
 
-  handle() {
+  handle(context: ContextControl) {
     console.log(this.name);
+    context.setState(new PreState());
   }
 }
 
 class ContextControl {
-  states: State[];
   current: State;
 
-  constructor(states: State[]) {
-    this.states = states;
-    this.current = states[0];
+  constructor(state: State) {
+    this.current = state;
   }
 
-  /**
-   * 循环状态
-   */
-  process() {
-    this.current.handle();
+  setState(state: State) {
+    this.current = state;
+  }
 
-    const states = this.states;
-    for (let i = 0; i < states.length; i++) {
-      if (states[i] == this.current) {
-        this.current = i == states.length - 1 ? states[0] : states[i + 1];
-        break;
-      }
-    }
+  //对请求做处理
+  handle() {
+    this.current.handle(this);
   }
 }
 
-const cc = new ContextControl([new PreState(), new NxtState()]);
-cc.process();
-cc.process();
-cc.process();
+const pre = new PreState();
+const cc = new ContextControl(pre);
+
+cc.handle();
+cc.handle();
