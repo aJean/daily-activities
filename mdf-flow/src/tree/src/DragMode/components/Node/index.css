@@ -1,0 +1,164 @@
+.start, .end {
+  line-height: 40px;
+  height: 40px;
+  width: 40px;
+  border-radius: 40px;
+}
+
+.trigger {
+  line-height: 40px;
+  height: 40px;
+  width: 100px;
+  border-radius: 10px;
+}
+
+.normal {
+  line-height: 80px;
+  height: 80px;
+  width: 80px;
+}
+
+.node-card {
+  position: relative;
+  background-color: white;
+  text-align: center;
+  width: 200px;
+  border-radius: 10px;
+  box-shadow: rgba(0,0,0,.2) 0 1px 5px 0px;
+
+  .flow-node-drag {
+
+  }
+
+  .flow-node-drag:hover {
+    cursor: crosshair;
+  }
+
+  .info-cell {
+    border-radius: 6px;
+    margin: 5px;
+    width: 190px;
+    min-height: 80px;
+    position: relative;
+    cursor: move;
+  }
+  .info-cell-green {
+    background-color: #d8f3dc;
+  }
+  .info-cell-green::before {
+    content: ' ';
+    position:absolute;
+    left: 0;
+    top: 0;
+    width: 5px;
+    height: 100%;
+    border-radius: 10px;
+    background-color: #72c040;
+  }
+
+  .info-cell-orange {
+    background-color: #ffe5d9;
+  }
+  .info-cell-orange::before {
+    content: ' ';
+    position:absolute;
+    left: 0;
+    top: 0;
+    width: 5px;
+    height: 100%;
+    border-radius: 10px;
+    background-color: #fb8b24;
+  }
+
+  .info-cell-blue {
+    background-color: #d7e3fc;
+  }
+  .info-cell-blue::before {
+    content: ' ';
+    position:absolute;
+    left: 0;
+    top: 0;
+    width: 5px;
+    height: 100%;
+    border-radius: 10px;
+    background-color: #abc4ff;
+  }
+
+  h4 {
+    margin: 0;
+    padding: 5px;
+    line-height: 22px;
+    text-align: center;
+    position: relative;
+    .fold-icon {
+      margin-left: 3px;
+      cursor: pointer;
+    }
+    .close-icon {
+      position: absolute;
+      right: 10px;
+      cursor: pointer;
+    }
+  }
+
+  .card-body {
+    padding: 14px;
+    text-align: left;
+    .card-title {
+      font-size: 15px;
+      .title {
+        margin-left: 5px;
+        font-weight: 500;
+        color: rgba(0,0,0, .7)
+      }
+      margin-bottom: 2px;
+    }
+    .card-main {
+      font-size: 13px;
+      color: rgba(0,0,0, .7)
+    }
+  }
+}
+
+
+.node-component {
+  position: absolute;
+}
+
+.default-node-display {
+  width: 200px;
+  text-align: center;
+  padding: 5px;
+  border-radius: 5px;
+  box-shadow: rgba(0,0,0,.2) 0 1px 5px 0px;
+
+  .default-node-create-line-area {
+    cursor: crosshair;
+    height: 40px;
+    line-height: 40px;
+    border: 1px dotted rgba(0,0,0,.2)
+  }
+
+  .default-node-drag-area {
+    cursor: move;
+    height: 40px;
+    line-height: 40px;
+  }
+  
+  h3 {
+    cursor: move;
+  }
+}
+
+
+.delete-icon {
+  position: absolute;
+  cursor: pointer;
+  /* top: -5px; */
+  top: 2px;
+  right: 5px;
+  /* right: -5px; */
+  /* right: 0; */
+  border-radius: 9px;
+  font-size: 18px;
+}

@@ -1,0 +1,46 @@
+{
+  "name": "mdf-flow",
+  "version": "1.0.0",
+  "description": "Project created by Eden",
+  "author": "qy",
+  "private": true,
+  "scripts": {
+    "start": "ace start",
+    "build": "ace build",
+    "test": "eden-test -e=jsdom -l=ts",
+    "lint": "eden-lint"
+  },
+  "dependencies": {
+    "@babel/runtime-corejs3": "^7.16.3",
+    "@ies/ace": "^1.0.2",
+    "classnames": "^2.3.1",
+    "jsplumb": "^2.15.6",
+    "postcss": "8.4.1",
+    "react": "^17.0.0",
+    "react-dom": "^17.0.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^12.1.1",
+    "@commitlint/config-conventional": "^12.1.1",
+    "@ies/eden-lint": "^3.11.0",
+    "@ies/eden-test": "^1.1.5",
+    "@testing-library/react": "^12.1.2",
+    "@types/jest": "^27.0.1",
+    "@types/react": "^17.0.0",
+    "@types/testing-library__jest-dom": "^5.14.1",
+    "husky": "^4.3.8",
+    "lint-staged": "^10.5.4",
+    "typescript": "^4.2.4"
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint .commitlintrc.js -E HUSKY_GIT_PARAMS",
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*": [
+      "eden-lint"
+    ]
+  }
+}

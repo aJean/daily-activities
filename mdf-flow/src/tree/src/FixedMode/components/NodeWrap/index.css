@@ -1,0 +1,55 @@
+.add-condition-button {
+  position: absolute;
+  z-index: 2;
+  &.vertical {
+    transform: translate(0, -50%);
+  }
+  &.horizontal {
+    transform: translate(-50%, 0);
+  }
+}
+
+.option {
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  white-space: nowrap;
+  &:hover {
+    background-color: #f7f7f7;
+  }
+  .icon {
+    height: 16px;
+    width: 16px;
+    margin-right: 8px;
+  }
+}
+
+.node {
+  position: relative;
+  &:not(.virtual) {
+    cursor: pointer;
+    &:hover {
+      .remove {
+        opacity: 1;
+      }
+    }
+  }
+  .remove {
+    &:hover {
+      opacity: 1;
+    }
+    opacity: 0;
+    color: #ff5d3b;
+    width: 18px;
+    height: 18px;
+    position: absolute;
+    top: -7px;
+    right: -7px;
+  }
+  :global {
+    .ant-popover-message-title {
+      white-space: nowrap;
+    }
+  }
+}

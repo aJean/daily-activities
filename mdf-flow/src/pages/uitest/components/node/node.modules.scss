@@ -1,0 +1,24 @@
+.wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.node {
+  position: relative;
+  box-sizing: border-box;
+  width: 64px;
+  border-radius: 50%;
+  background-color: #666;
+  color: #fff;
+  height: 64px;
+  line-height: 64px;
+  text-align: center;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+
+}
+
+.branch-content {}

@@ -1,0 +1,56 @@
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.node {
+  box-sizing: border-box;
+  width: 200px;
+  height: 40px;
+  background-color: #fff;
+  border: 1px solid #c5c4c4;
+  text-align: center;
+  line-height: 40px;
+  cursor: pointer;
+  margin: 0px 16px;
+}
+
+.overlay {
+  width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff;
+  box-shadow: 0px 3px 9px rgb(0 0 0 / 8%);
+  cursor: pointer;
+  z-index: 1;
+}
+
+.cleanUp {
+  position: absolute;
+  top: -2px;
+  background-color: #e9e8e8;
+  height: 4px;
+  width: 50%;
+}
+
+.cleanLeft {
+  left: -1px;
+}
+
+.cleanDown {
+  position: absolute;
+  bottom: -2px;
+  background-color: #e9e8e8;
+  height: 4px;
+  width: 50%;
+}
+
+.cleanRight {
+  right: -1px;
+}

@@ -1,0 +1,18 @@
+.node-item {
+  display: flex;
+  position: relative;
+
+  &.vertical {
+    flex-direction: column;
+    &:not(.branch-content) {
+      align-items: center;
+    }
+  }
+  
+  &.horizontal {
+    flex-direction: row;
+    &:not(.branch-content) {
+      align-items: center;
+    }
+  }
+}
