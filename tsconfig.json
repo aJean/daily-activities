@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "outDir": "./dist",
     "target": "es5",
     "module": "esnext",
     "moduleResolution": "node",
@@ -9,5 +10,10 @@
     "noImplicitAny": false,
     "suppressImplicitAnyIndexErrors": true
   },
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ],
+  "include": [
+    "architecture/decorator.ts"
+  ]
 }
