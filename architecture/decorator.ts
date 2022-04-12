@@ -14,6 +14,7 @@ function propDecorator(target, propertyKey) {
   console.log('prop: ', target, propertyKey);
 }
 
+// 参数
 function paramDecorator(target, propertyKey, index) {
   console.log('param: ', target, propertyKey);
 }
