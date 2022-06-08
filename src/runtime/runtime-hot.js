@@ -785,6 +785,7 @@
 /******/ 			i: moduleId,
 /******/ 			l: false,
 /******/ 			exports: {},
+              // 代码中调用 module.hot.accept 注入监听函数
 /******/ 			hot: hotCreateModule(moduleId),
 /******/ 			parents: (hotCurrentParentsTemp = hotCurrentParents, hotCurrentParents = [], hotCurrentParentsTemp),
 /******/ 			children: []
